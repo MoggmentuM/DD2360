@@ -1,1 +1,1 @@
-# Homework 2 for course DD2360.
+# Homeworks and projects for the course DD2360.
