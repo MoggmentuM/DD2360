@@ -132,8 +132,5 @@ int main(int argc, char **argv) {
   free(hostInput2);
   free(hostOutput);
 
-  printf("\n---------------------------------------------\n");
-  printf("SUCCESS\n");
-
   return 0;
 }

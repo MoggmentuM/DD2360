@@ -36,7 +36,7 @@ DataType cpuSecond() {
     return ((DataType)tp.tv_sec + (DataType)tp.tv_usec * 1.e-6);
 }
 
-void vectorAdditionCudaStreams(DataType *h_in1, DataType *h_in2, DataType *h_out, int len, int segmentSize, int inputLength) {
+void vectorAdditionCudaStreams(DataType *h_in1, DataType *h_in2, DataType *h_out, int len, int segmentSize, int inputLength, dim3 grid, dim3 block) {
     int segmentBytes = segmentSize * sizeof(DataType);
 
     DataType *d_in1[4], *d_in2[4], *d_out[4];
@@ -54,10 +54,6 @@ void vectorAdditionCudaStreams(DataType *h_in1, DataType *h_in2, DataType *h_out
         cudaMemcpyAsync(d_in2[i], h_in2 + i * segmentSize, segmentBytes, cudaMemcpyHostToDevice, streams[i]);
     }
 
-    //@@ Initialize the 1D grid and block dimensions here
-    int dimx = 32;
-    dim3 block(dimx, 1);
-    dim3 grid((inputLength + block.x - 1) / block.x, 1);
 
     for (int i = 0; i < 4; ++i) {
         vecAdd<<<grid, block, 0, streams[i]>>>(d_in1[i], d_in2[i], d_out[i], segmentSize);
@@ -111,12 +107,31 @@ int main(int argc, char **argv) {
     cudaEventCreate(&stop);
     
     // Define different segment sizes for testing
-    int segmentSizes[] = {64, 128, 256, 512};
+    int segmentSizes[] = {min(64,inputLength/32), min(128,inputLength/16), min(256,inputLength/8), min(512,inputLength/4)};
+
+
+    // optimize grid and block dimention
+    int device;
+    cudaGetDevice(&device);
+
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, device);
+        
+    int warpSize = prop.warpSize;
+    int maxThreadsPerSM = prop.maxThreadsPerMultiProcessor;
+
+    int desiredBlockSize = 256;
+    int optimalBlockSize = min(desiredBlockSize, maxThreadsPerSM / warpSize) * warpSize;
+
+    int blocksPerGrid = (inputLength + optimalBlockSize - 1) / optimalBlockSize;
+
+    dim3 block(optimalBlockSize);
+    dim3 grid(blocksPerGrid);
 
     for (int i = 0; i < 4; ++i) {
         cudaEventRecord(start);
 
-        vectorAdditionCudaStreams(hostInput1, hostInput2, hostOutput, inputLength, segmentSizes[i], inputLength);
+        vectorAdditionCudaStreams(hostInput1, hostInput2, hostOutput, inputLength, segmentSizes[i], inputLength, grid, block);
 
         DataType elapsed_time = elapsed();
 
@@ -131,7 +146,6 @@ int main(int argc, char **argv) {
     free(hostOutput);
 
     printf("\n---------------------------------------------\n");
-    printf("SUCCESS\n");
 
     return 0;
 }
