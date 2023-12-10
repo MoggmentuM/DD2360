@@ -42,9 +42,9 @@ void vectorAdditionCudaStreams(DataType *h_in1, DataType *h_in2, DataType *h_out
     DataType *d_in1[4], *d_in2[4], *d_out[4];
 
     for (int i = 0; i < 4; ++i) {
-        cudaMalloc((void**)&d_in1[i], segmentBytes);
-        cudaMalloc((void**)&d_in2[i], segmentBytes);
-        cudaMalloc((void**)&d_out[i], segmentBytes);
+        cudaHostAlloc((void**)&d_in1[i], segmentBytes, cudaHostAllocDefault);  // Allocate pinned memory
+        cudaHostAlloc((void**)&d_in2[i], segmentBytes, cudaHostAllocDefault);
+        cudaHostAlloc((void**)&d_out[i], segmentBytes, cudaHostAllocDefault);
     }
 
     cudaStream_t streams[4];
@@ -69,9 +69,9 @@ void vectorAdditionCudaStreams(DataType *h_in1, DataType *h_in2, DataType *h_out
     }
 
     for (int i = 0; i < 4; ++i) {
-        cudaFree(d_in1[i]);
-        cudaFree(d_in2[i]);
-        cudaFree(d_out[i]);
+        cudaFreeHost(d_in1[i]);  // Free pinned memory
+        cudaFreeHost(d_in2[i]);
+        cudaFreeHost(d_out[i]);
     }
 }
 

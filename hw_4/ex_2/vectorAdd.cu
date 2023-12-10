@@ -21,7 +21,7 @@ __global__ void vecAdd(DataType *in1, DataType *in2, DataType *out, int len) {
 }
 
 //@@ Insert code to implement timer start
-cudaEvent_t start, stop;
+cudaEvent_t start, stop; //this is not optimal, takes a lot of time
 
 //@@ Insert code to implement timer stop
 DataType elapsed() {
