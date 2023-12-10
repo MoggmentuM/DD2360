@@ -72,6 +72,10 @@ int main(int argc, char **argv) {
     hostInput2[i] = rand() % (max_number + 1 - minimum_number) + minimum_number;
   }
 
+  //create timer events
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
   //start timer
   cudaEventRecord(start);
 
