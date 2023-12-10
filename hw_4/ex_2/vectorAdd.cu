@@ -91,8 +91,6 @@ int main(int argc, char **argv) {
   dim3 grid((inputLength + block.x - 1) / block.x, 1);
 
   //@@ Launch the GPU Kernel here
-  DataType start = cpuSecond();
-
   vecAdd<<<grid, block>>>(deviceInput1, deviceInput2, deviceOutput, inputLength);
   cudaDeviceSynchronize();
 
