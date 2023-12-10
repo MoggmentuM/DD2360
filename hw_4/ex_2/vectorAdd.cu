@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 
   DataType elapsed_time = elapsed();
 
-  printf("vecAdd<<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x, grid.y, block.x, block.y, elapsed);
+  printf("vecAdd<<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x, grid.y, block.x, block.y, elapsed_time);
 
   //@@ Copy the GPU memory back to the CPU here
   cudaMemcpy(hostOutput, deviceOutput, size, cudaMemcpyDeviceToHost);
