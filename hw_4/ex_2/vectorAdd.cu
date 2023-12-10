@@ -21,13 +21,18 @@ __global__ void vecAdd(DataType *in1, DataType *in2, DataType *out, int len) {
 }
 
 //@@ Insert code to implement timer start
-//@@ Insert code to implement timer stop
-DataType cpuSecond() {
-   struct timeval tp;
-   gettimeofday(&tp,NULL);
-   return ((DataType)tp.tv_sec + (DataType)tp.tv_usec*1.e-6);
-}
+cudaEvent_t start, stop;
 
+//@@ Insert code to implement timer stop
+DataType elapsed() {
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    return milliseconds / 1000.0; // convert to seconds
+}
 
 int main(int argc, char **argv) {
 
@@ -67,6 +72,9 @@ int main(int argc, char **argv) {
     hostInput2[i] = rand() % (max_number + 1 - minimum_number) + minimum_number;
   }
 
+  //start timer
+  cudaEventRecord(start);
+
   //@@ Insert code below to allocate GPU memory here
   cudaMalloc((void **)&deviceInput1, size);
   cudaMalloc((void **)&deviceInput2, size);
@@ -88,7 +96,7 @@ int main(int argc, char **argv) {
   vecAdd<<<grid, block>>>(deviceInput1, deviceInput2, deviceOutput, inputLength);
   cudaDeviceSynchronize();
 
-  DataType elapsed = cpuSecond() - start;
+  DataType elapsed_time = elapsed();
 
   printf("vecAdd<<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x, grid.y, block.x, block.y, elapsed);
 
